@@ -3,8 +3,10 @@ package af.asr.terminalid.impl;
 import af.asr.terminalid.data.MachineId;
 import af.asr.terminalid.data.MachineIdRepository;
 import af.asr.terminalid.exception.MachineIdServiceException;
+import af.asr.terminalid.exception.dataaccess.DataAccessLayerException;
 import af.asr.terminalid.exception.idgenerator.spi.MachineIdGenerator;
 import af.asr.terminalid.utils.MachineIdConstant;
+import af.asr.terminalid.utils.MathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -48,7 +50,7 @@ public class MachineIdGeneratorImpl implements MachineIdGenerator<String> {
 		try {
 			machineId = machineIdRepository.findLastMID();
 		} catch (DataAccessLayerException dataAccessLayerException) {
-			throw new MachineIdServiceException(MachineIdConstant.MID_FETCH_EXCEPTION.getErrorCode(),
+			throw new DataAccessLayerException(MachineIdConstant.MID_FETCH_EXCEPTION.getErrorCode(),
 					MachineIdConstant.MID_FETCH_EXCEPTION.getErrorMessage(), dataAccessLayerException.getCause());
 		}
 		try {
@@ -60,7 +62,7 @@ public class MachineIdGeneratorImpl implements MachineIdGenerator<String> {
 				machineId.setUpdatedBy("SYSTEM");
 				machineId.setUpdatedDateTime(null);
 				generatedMID = initialValue;
-				machineIdRepository.create(machineId);
+				machineIdRepository.save(machineId);
 			} else {
 				generatedMID = machineId.getMId() + 1;
 				MachineId entity = new MachineId();
@@ -69,14 +71,14 @@ public class MachineIdGeneratorImpl implements MachineIdGenerator<String> {
 				entity.setUpdatedDateTime(LocalDateTime.now(ZoneId.of("UTC")));
 				entity.setUpdatedBy("SYSTEM");
 				entity.setCreatedBy("SYSTEM");
-				machineIdRepository.create(entity);
+				machineIdRepository.save(entity);
 			}
 
 		} catch (DataAccessLayerException e) {
 			if (e.getCause().getClass() == EntityExistsException.class) {
 				generateMachineId();
 			} else {
-				throw new MachineIdServiceException(MachineIdConstant.MID_INSERT_EXCEPTION.getErrorCode(),
+				throw new DataAccessLayerException(MachineIdConstant.MID_INSERT_EXCEPTION.getErrorCode(),
 						MachineIdConstant.MID_INSERT_EXCEPTION.getErrorMessage(), e);
 			}
 		}
