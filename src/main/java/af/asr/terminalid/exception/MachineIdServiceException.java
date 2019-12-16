@@ -1,12 +1,10 @@
 package af.asr.terminalid.exception;
 
-import io.mosip.kernel.core.exception.BaseUncheckedException;
+
+import af.asr.terminalid.exception.common.BaseUncheckedException;
 
 /**
  * Class to handle MachineId generator service exception.
- * 
- * @author Sagar Mahapatra
- * @since 1.0.0
  *
  */
 public class MachineIdServiceException extends BaseUncheckedException {
