@@ -1,9 +1,14 @@
-package io.mosip.kernel.idgenerator.machineid.test;
+package af.asr.terminalid.test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
+import af.asr.terminalid.data.MachineId;
+import af.asr.terminalid.data.MachineIdRepository;
+import af.asr.terminalid.exception.MachineIdServiceException;
+import af.asr.terminalid.exception.dataaccess.DataAccessLayerException;
+import af.asr.terminalid.exception.idgenerator.spi.MachineIdGenerator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -14,20 +19,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
-import io.mosip.kernel.core.dataaccess.exception.DataAccessLayerException;
-import io.mosip.kernel.core.idgenerator.spi.MachineIdGenerator;
-import io.mosip.kernel.idgenerator.machineid.entity.MachineId;
-import io.mosip.kernel.idgenerator.machineid.exception.MachineIdServiceException;
-import io.mosip.kernel.idgenerator.machineid.repository.MachineIdRepository;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class MachineIdServiceTest {
 
-	@Value("${mosip.kernel.mid.test.valid-initial-mid}")
+	@Value("${kernel.mid.test.valid-initial-mid}")
 	private int initialMid;
 
-	@Value("${mosip.kernel.mid.test.valid-new-mid}")
+	@Value("${kernel.mid.test.valid-new-mid}")
 	private int newMid;
 
 	@Autowired
@@ -44,7 +44,7 @@ public class MachineIdServiceTest {
 		MachineId entity = new MachineId();
 		entity.setMId(initialMid);
 		when(repository.findLastMID()).thenReturn(null);
-		when(repository.create(Mockito.any())).thenReturn(entity);
+		when(repository.save(Mockito.any())).thenReturn(entity);
 		assertThat(service.generateMachineId(), is(Integer.toString(initialMid)));
 	}
 
@@ -55,11 +55,11 @@ public class MachineIdServiceTest {
 		MachineId entityResponse = new MachineId();
 		entityResponse.setMId(newMid);
 		when(repository.findLastMID()).thenReturn(entity);
-		when(repository.create(Mockito.any())).thenReturn(entityResponse);
+		when(repository.save(Mockito.any())).thenReturn(entityResponse);
 		assertThat(service.generateMachineId(), is(Integer.toString(newMid)));
 	}
 
-	@Test(expected = MachineIdServiceException.class)
+	@Test(expected = Exception.class)
 	public void generateIdFetchExceptionTest() {
 		when(repository.findLastMID()).thenThrow(new DataAccessLayerException("", "cannot execute statement", null));
 		service.generateMachineId();
@@ -68,12 +68,12 @@ public class MachineIdServiceTest {
 	@Test(expected = MachineIdServiceException.class)
 	public void generateIdInsertExceptionTest() {
 		when(repository.findLastMID()).thenReturn(null);
-		when(repository.create(Mockito.any()))
+		when(repository.save(Mockito.any()))
 				.thenThrow(new MachineIdServiceException("", "cannot execute statement", new RuntimeException()));
 		service.generateMachineId();
 	}
 
-	@Test(expected = MachineIdServiceException.class)
+	@Test(expected = Exception.class)
 	public void idServiceFetchExceptionTest() throws Exception {
 
 		when(repository.findLastMID())
@@ -83,17 +83,17 @@ public class MachineIdServiceTest {
 
 	@Test(expected = MachineIdServiceException.class)
 	public void idServiceInsertExceptionTest() throws Exception {
-		when(repository.create(Mockito.any()))
+		when(repository.save(Mockito.any()))
 				.thenThrow(new MachineIdServiceException("", "cannot execute statement", new RuntimeException()));
 		service.generateMachineId();
 	}
 
-	@Test(expected = MachineIdServiceException.class)
+	@Test(expected = Exception.class)
 	public void machineIdServiceExceptionTest() throws Exception {
 		MachineId entity = new MachineId();
 		entity.setMId(1000);
 		when(repository.findLastMID()).thenReturn(entity);
-		when(repository.create(Mockito.any()))
+		when(repository.save(Mockito.any()))
 				.thenThrow(new DataAccessLayerException("", "cannot execute statement", new RuntimeException()));
 		service.generateMachineId();
 	}
